@@ -66,7 +66,7 @@ async def on_ready():
         print(e)
 
 
-@bot.tree.command(name="status", description="Get the build status")
+@bot.tree.command(name="windows_status", description="Get the build status")
 @app_commands.describe(build="Build number (-1 for latest build)")
 async def status(interaction, build: int):
 
@@ -140,7 +140,7 @@ async def status(interaction, build: int):
         print(e)
 
 
-@bot.tree.command(name="start_build", description="Build the latest Saleblazers Default Build")
+@bot.tree.command(name="windows_start_build", description="Build the latest Saleblazers Default Build")
 async def start_build(interaction):
     try:
         response = requests.post(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_BUILD_PATH}/build?token={BUILD_TOKEN}")
@@ -157,7 +157,7 @@ async def start_build(interaction):
         print(e)
 
 
-@bot.tree.command(name="abort_build", description="Abort the latest Saleblazers Default Build")
+@bot.tree.command(name="windows_abort_build", description="Abort the latest Saleblazers Default Build")
 async def abort_build(interaction):
     try:
         response = requests.post(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_BUILD_PATH}/lastBuild/stop")
