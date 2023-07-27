@@ -3,7 +3,7 @@ Jenkins Mac Build Support is a discord bot for remotely triggering the Jenkins S
 
 # Local Hosting
 To run the bot, you need to run the following commands in terminal
-```bash
+```Zsh
 source env/bin/activate
 cd /Users/airstrafeconference/Documents/GitHub/Jenkins-Mac-Build-Support
 python3 main.py 
