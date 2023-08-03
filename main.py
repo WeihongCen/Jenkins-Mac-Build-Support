@@ -18,7 +18,6 @@ API_TOKEN = os.getenv('API_TOKEN')
 BUILD_TOKEN = os.getenv('BUILD_TOKEN')
 DEFAULT_MAC_BUILD_NAME = os.getenv('DEFAULT_MAC_BUILD_NAME')
 DEFAULT_MAC_BUILD_LOG_FOLDER_ID = os.getenv('DEFAULT_MAC_BUILD_LOG_FOLDER_ID')
-#1Hm3L-zSTpgoTYn4lKWR_XYKTQMVxwMQR
 
 JENKINS_PATH = "localhost:8080"
 BUILD_LOG_PATH = "build_log.txt"
@@ -94,7 +93,7 @@ async def on_ready():
         print(e)
 
 
-@BOT.tree.command(name="windows_status", description="Get the build status")
+@BOT.tree.command(name="mac_status", description="Get the build status")
 @app_commands.describe(build="Build number (-1 for latest build)")
 async def status(interaction, build:int = -1):
 
@@ -168,7 +167,7 @@ async def status(interaction, build:int = -1):
         print(e)
 
 
-@BOT.tree.command(name="windows_log", description="Get the build console log")
+@BOT.tree.command(name="mac_log", description="Get the build console log")
 @app_commands.describe(build="Build number (-1 for latest build)")
 async def log(interaction, build:int = -1):
 
@@ -199,7 +198,7 @@ async def log(interaction, build:int = -1):
         print(e)
 
 
-@BOT.tree.command(name="windows_start_build", description="Build the latest Saleblazers Default Build")
+@BOT.tree.command(name="mac_start_build", description="Build the latest Saleblazers Default Build")
 async def start_build(interaction):
     try:
         response = requests.post(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_MAC_BUILD_PATH}/build?token={BUILD_TOKEN}")
@@ -216,7 +215,7 @@ async def start_build(interaction):
         print(e)
 
 
-@BOT.tree.command(name="windows_abort_build", description="Abort the latest Saleblazers Default Build")
+@BOT.tree.command(name="mac_abort_build", description="Abort the latest Saleblazers Default Build")
 async def abort_build(interaction):
     try:
         response = requests.post(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_MAC_BUILD_PATH}/lastBuild/stop")
