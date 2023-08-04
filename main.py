@@ -1,5 +1,7 @@
 import os
 import os.path
+from io import StringIO
+import zipfile
 from dotenv import load_dotenv
 import discord
 from discord import Embed
@@ -16,13 +18,13 @@ load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 API_TOKEN = os.getenv('API_TOKEN')
 BUILD_TOKEN = os.getenv('BUILD_TOKEN')
-DEFAULT_MAC_BUILD_NAME = os.getenv('DEFAULT_MAC_BUILD_NAME')
-DEFAULT_MAC_BUILD_LOG_FOLDER_ID = os.getenv('DEFAULT_MAC_BUILD_LOG_FOLDER_ID')
+DEFAULT_BUILD_NAME = os.getenv('DEFAULT_BUILD_NAME')
+DEFAULT_BUILD_LOG_FOLDER_ID = os.getenv('DEFAULT_BUILD_LOG_FOLDER_ID')
 
 JENKINS_PATH = "localhost:8080"
 BUILD_LOG_PATH = "build_log.txt"
-DEFAULT_MAC_BUILD_PATH = f"{JENKINS_PATH}/job/{DEFAULT_MAC_BUILD_NAME}"
-DEFAULT_MAC_BUILD_LOG_FOLDER_URL = f"https://drive.google.com/drive/folders/{DEFAULT_MAC_BUILD_LOG_FOLDER_ID}"
+DEFAULT_BUILD_PATH = f"{JENKINS_PATH}/job/{DEFAULT_BUILD_NAME}"
+DEFAULT_BUILD_LOG_FOLDER_URL = f"https://drive.google.com/drive/folders/{DEFAULT_BUILD_LOG_FOLDER_ID}"
 
 BLURPLE = 0x5865F2
 GREEN = 0x43b581
@@ -36,7 +38,19 @@ DISCORD_EMBED_VALUE_LIMIT = 1024
 SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly',
           'https://www.googleapis.com/auth/drive.file']
 
-GAUTH = GoogleAuth()           
+GAUTH = GoogleAuth()
+GAUTH.LoadCredentialsFile("mycreds.txt")
+if GAUTH.credentials is None:
+    # Authenticate if they're not there
+    GAUTH.LocalWebserverAuth()
+elif GAUTH.access_token_expired:
+    # Refresh them if expired
+    GAUTH.Refresh()
+else:
+    # Initialize the saved creds
+    GAUTH.Authorize()
+# Save the current credentials to a file
+GAUTH.SaveCredentialsFile("mycreds.txt")
 DRIVE = GoogleDrive(GAUTH)
 
 BOT = commands.Bot(command_prefix="/", intents=discord.Intents.all())
@@ -65,7 +79,7 @@ def upload_log(id):
     dt = dt.strftime('%Y-%m-%d %I:%M %p')
 
     gfile = DRIVE.CreateFile({'title': f"build_log_{id} {dt}",
-                              'parents': [{'id': DEFAULT_MAC_BUILD_LOG_FOLDER_ID}]})
+                              'parents': [{'id': DEFAULT_BUILD_LOG_FOLDER_ID}]})
     gfile.SetContentFile(BUILD_LOG_PATH)
     gfile.Upload()
 
@@ -102,7 +116,7 @@ async def status(interaction, build:int = -1):
         build_number = "lastBuild"
 
     try:
-        response = requests.get(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_MAC_BUILD_PATH}/{build_number}/api/json")
+        response = requests.get(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_BUILD_PATH}/{build_number}/api/json")
         if response.status_code == 200:
             result = response.json()
             name = result["fullDisplayName"]
@@ -177,7 +191,7 @@ async def log(interaction, build:int = -1):
 
     try:
         await interaction.response.defer()
-        response = requests.get(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_MAC_BUILD_PATH}/{build_number}/consoleText")
+        response = requests.get(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_BUILD_PATH}/{build_number}/consoleText")
         if response.status_code == 200:
             text_content = response.text
             with open(BUILD_LOG_PATH, "w") as file:
@@ -185,7 +199,7 @@ async def log(interaction, build:int = -1):
             # with zipfile.ZipFile(BUILD_LOG_ZIP_PATH, "w") as zip_file:
             #     zip_file.write(BUILD_LOG_PATH)
             upload_log(build_number)
-            embed = Embed(title="File Folder", url=DEFAULT_MAC_BUILD_LOG_FOLDER_URL, color=GREEN)
+            embed = Embed(title="File Folder", url=DEFAULT_BUILD_LOG_FOLDER_URL, color=GREEN)
             await interaction.followup.send(embed=embed)
             
         else:
@@ -201,7 +215,7 @@ async def log(interaction, build:int = -1):
 @BOT.tree.command(name="mac_start_build", description="Build the latest Saleblazers Default Build")
 async def start_build(interaction):
     try:
-        response = requests.post(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_MAC_BUILD_PATH}/build?token={BUILD_TOKEN}")
+        response = requests.post(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_BUILD_PATH}/build?token={BUILD_TOKEN}")
         if response.status_code == 201:
             embed = Embed(description="Build request sent.", color=GREEN)
             await interaction.response.send_message(embed=embed)
@@ -218,7 +232,7 @@ async def start_build(interaction):
 @BOT.tree.command(name="mac_abort_build", description="Abort the latest Saleblazers Default Build")
 async def abort_build(interaction):
     try:
-        response = requests.post(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_MAC_BUILD_PATH}/lastBuild/stop")
+        response = requests.post(f"http://jenkins_as:{API_TOKEN}@{DEFAULT_BUILD_PATH}/lastBuild/stop")
         if response.status_code == 200:
             embed = Embed(description="Abort request sent.", color=GREEN)
             await interaction.response.send_message(embed=embed)
