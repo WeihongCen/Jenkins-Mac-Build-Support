@@ -1,7 +1,5 @@
 import os
 import os.path
-from io import StringIO
-import zipfile
 from dotenv import load_dotenv
 import discord
 from discord import Embed
@@ -196,8 +194,7 @@ async def log(interaction, build:int = -1):
             text_content = response.text
             with open(BUILD_LOG_PATH, "w") as file:
                 file.write(text_content)
-            # with zipfile.ZipFile(BUILD_LOG_ZIP_PATH, "w") as zip_file:
-            #     zip_file.write(BUILD_LOG_PATH)
+                
             upload_log(build_number)
             embed = Embed(title="File Folder", url=DEFAULT_BUILD_LOG_FOLDER_URL, color=GREEN)
             await interaction.followup.send(embed=embed)
